@@ -1,0 +1,61 @@
+version: '3'
+services:
+    web:
+        image: nginx:latest
+        container_name: web
+        restart: always
+        ports:
+            - "8088:80"
+        volumes:
+            - ./code:/code
+            - ./site.conf:/etc/nginx/conf.d/site.conf
+        links:
+            - php
+            - dbmysql
+        networks:
+            - app-network
+    php:
+        image: nanoninja/php-fpm:latest
+        container_name: php
+        restart: always
+        volumes:
+            - ./code:/code
+        networks:
+            - app-network
+    myadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: phpmyadmin
+        ports:
+            - "8089:80"
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=dbmysql
+        restart: always
+        depends_on:
+            - dbmysql
+        networks:
+            - app-network
+    dbmysql:
+        image: mysql:5.7.22
+        container_name: dbmysql
+        restart: always
+        ports:
+            - "8989:3306"
+        environment:
+            - MYSQL_DATABASE=test
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_USER=dev
+            - MYSQL_PASSWORD=dev
+        volumes:
+            - dbdata:/var/lib/mysql/
+        networks:
+            - app-network
+
+#Docker Networks
+networks:
+    app-network:
+        driver: bridge
+#Volumes
+volumes:
+    dbdata:
+        driver: local
